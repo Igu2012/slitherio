@@ -1,39 +1,46 @@
-# Slither.io Clone - Render Ready
+# Slither.io Clone - High Performance Edition
 
-Este é um clone do jogo Slither.io adaptado para rodar em servidores web, especificamente configurado para o **Render**.
+This is a highly optimized Slither.io clone designed to run on low-resource environments like **Render's Free Tier (512MB RAM)** while supporting up to **100 concurrent players**.
 
-## 🚀 Como Rodar Localmente
+## 🚀 Key Features
 
-1.  **Instale as dependências:**
+-   **Client-Side Physics**: Movement and collision detection are handled by the client to minimize server CPU and RAM usage.
+-   **Low Memory Footprint**: The server stores only essential player data, easily fitting within 512MB of RAM.
+-   **Mobile Support**: Optimized touch controls, responsive UI, and a dedicated "Boost" button for mobile players.
+-   **Smooth Gameplay**: Uses 20FPS server synchronization with local interpolation for a fluid experience.
+-   **Render Ready**: Includes `render.yaml` for instant deployment.
+
+## 🛠️ How to Run Locally
+
+1.  **Install dependencies:**
     ```bash
     npm install
     ```
 
-2.  **Inicie o servidor:**
+2.  **Start the server:**
     ```bash
     npm start
     ```
 
-3.  **Acesse no navegador:**
-    Abra `http://localhost:3000`
+3.  **Play:**
+    Open `http://localhost:3000` in your browser.
 
-## 🌐 Deploy no Render
+## 🌐 Deployment on Render
 
-Este repositório já contém um arquivo `render.yaml` para facilitar o deploy.
+This project is configured for Render's **Blueprint** deployment.
 
-1.  Crie uma conta no [Render](https://render.com/).
-2.  Conecte seu GitHub.
-3.  Crie um novo **Blueprint Instance** e selecione este repositório.
-4.  O Render configurará automaticamente o servidor Node.js e o WebSocket.
+1.  Create a free account on [Render](https://render.com/).
+2.  Connect your GitHub repository.
+3.  Select the `render.yaml` file when prompted or create a new **Blueprint Instance**.
+4.  The server will automatically deploy and be available at your Render URL.
 
-## 🛠️ Tecnologias
+## 📝 Technical Details
 
--   **Node.js**
--   **Express** (Servidor Web)
--   **ws** (WebSockets para multiplayer em tempo real)
--   **HTML5 Canvas** (Renderização do jogo)
+-   **Server**: Node.js + Express + WebSockets (ws).
+-   **Frontend**: Vanilla JS + HTML5 Canvas.
+-   **Networking**: Optimized JSON synchronization.
+-   **Mobile**: Touch-event handling with virtual joystick/button support.
 
-## 📝 Build e Run
+## ⚖️ Disclaimer
 
--   **Build:** O projeto não requer um passo de build complexo, apenas a instalação das dependências via `npm install`.
--   **Run:** O comando principal é `node server.js`, que inicia tanto o servidor de arquivos estáticos quanto o servidor de WebSockets.
+To achieve maximum performance and 100+ player support on a 512MB RAM server, this version trusts the client for movement and collisions (minimal anti-cheat).
