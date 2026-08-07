@@ -24,6 +24,7 @@ let targetAngle = 0;
 let lastTouchTime = 0;
 let touchCount = 0;
 let frameCount = 0;
+let doubleTapTimer = null;
 
 // Zoom system for mobile
 let zoom = 1;
@@ -168,16 +169,20 @@ canvas.addEventListener('touchstart', (e) => {
     handleInput(touch.clientX, touch.clientY);
     
     const now = Date.now();
-    if (now - lastTouchTime < 300) {
-        touchCount++;
-        if (touchCount === 2 && me && menu.style.display === 'none') {
+    
+    if (doubleTapTimer) {
+        clearTimeout(doubleTapTimer);
+        doubleTapTimer = null;
+        // Second tap detected - activate sprint
+        if (me && menu.style.display === 'none') {
             me.isSprinting = true;
-            touchCount = 0;
         }
     } else {
-        touchCount = 1;
+        // First tap
+        doubleTapTimer = setTimeout(() => {
+            doubleTapTimer = null;
+        }, 400);
     }
-    lastTouchTime = now;
 }, {passive: false});
 
 canvas.addEventListener('touchmove', (e) => {
@@ -189,7 +194,6 @@ canvas.addEventListener('touchmove', (e) => {
 canvas.addEventListener('touchend', (e) => {
     e.preventDefault();
     if (me) me.isSprinting = false;
-    touchCount = 0;
 }, {passive: false});
 
 function gameLoop(now) {
@@ -205,12 +209,12 @@ function gameLoop(now) {
         me.angle += diff * 0.2;
 
         // Movement
-        const baseSpeed = 2.5;
-        const sprintSpeed = 5;
-        const speed = me.isSprinting && me.score > 5 ? sprintSpeed : baseSpeed;
+        const baseSpeed = 3.5;
+        const sprintSpeed = 7;
+        const speed = me.isSprinting && me.score > 4 ? sprintSpeed : baseSpeed;
         
-        if (me.isSprinting && me.score > 5) {
-            me.score -= 0.04;
+        if (me.isSprinting && me.score > 4) {
+            me.score -= 0.02;
         }
 
         me.x += Math.cos(me.angle) * speed;
@@ -288,7 +292,7 @@ function draw() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Dynamic zoom for mobile
-    zoom = isMobile && me ? 1.6 : 1;
+    zoom = isMobile && me ? 2.2 : 1;
 
     ctx.save();
     ctx.translate(canvas.width / 2, canvas.height / 2);
