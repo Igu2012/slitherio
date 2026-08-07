@@ -8,8 +8,8 @@ const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
 const PORT = process.env.PORT || 3000;
-const MAP_SIZE = 5000;
-const MAX_FOOD = 600;
+const MAP_SIZE = 15000; // Increased from 5000
+const MAX_FOOD = 800;
 
 let players = new Map();
 let foods = [];
@@ -37,13 +37,14 @@ wss.on('connection', (ws) => {
             const data = JSON.parse(message);
             
             if (data.type === 'join') {
+                const margin = MAP_SIZE * 0.1;
                 players.set(playerId, {
                     id: playerId,
-                    x: Math.random() * MAP_SIZE,
-                    y: Math.random() * MAP_SIZE,
+                    x: margin + Math.random() * (MAP_SIZE - 2 * margin),
+                    y: margin + Math.random() * (MAP_SIZE - 2 * margin),
                     angle: 0,
                     score: 3,
-                    name: data.name || 'Player',
+                    name: (data.name || 'Player').substring(0, 12),
                     colors: data.colors || ['#00ff00'],
                     isSprinting: false,
                     lastUpdate: Date.now()
@@ -52,10 +53,10 @@ wss.on('connection', (ws) => {
             } 
             else if (data.type === 'update' && players.has(playerId)) {
                 const p = players.get(playerId);
-                p.x = data.x;
-                p.y = data.y;
+                p.x = Math.max(0, Math.min(MAP_SIZE, data.x));
+                p.y = Math.max(0, Math.min(MAP_SIZE, data.y));
                 p.angle = data.angle;
-                p.score = data.score;
+                p.score = Math.max(3, data.score);
                 p.isSprinting = data.isSprinting;
                 p.lastUpdate = Date.now();
             }
@@ -63,31 +64,9 @@ wss.on('connection', (ws) => {
                 const foodIndex = foods.findIndex(f => f.id === data.foodId);
                 if (foodIndex !== -1) {
                     foods[foodIndex] = spawnFood();
-                    // Broadcast food update to all
-                    const foodMsg = JSON.stringify({ type: 'food', index: foodIndex, newFood: foods[foodIndex] });
-                    wss.clients.forEach(client => {
-                        if (client.readyState === WebSocket.OPEN) client.send(foodMsg);
-                    });
                 }
             }
             else if (data.type === 'die' && players.has(playerId)) {
-                const p = players.get(playerId);
-                // Create food from dead snake segments (simplified)
-                if (data.segments) {
-                    data.segments.forEach((s, i) => {
-                        if (i % 5 === 0) {
-                            foods.push({
-                                id: Math.random().toString(36).substr(2, 5),
-                                x: s.x,
-                                y: s.y,
-                                color: p.colors[0],
-                                value: 2
-                            });
-                        }
-                    });
-                    // Keep food count in check
-                    if (foods.length > MAX_FOOD + 100) foods.splice(MAX_FOOD, foods.length - MAX_FOOD);
-                }
                 players.delete(playerId);
             }
         } catch (e) {}
@@ -96,14 +75,13 @@ wss.on('connection', (ws) => {
     ws.on('close', () => players.delete(playerId));
 });
 
-// Broadcast game state at 20fps to save bandwidth/CPU
+// Broadcast game state at 20fps
 setInterval(() => {
     if (players.size === 0) return;
     
     const now = Date.now();
     const playerList = [];
     for (const [id, p] of players) {
-        // Timeout players inactive for > 5s
         if (now - p.lastUpdate > 5000) {
             players.delete(id);
             continue;
@@ -118,9 +96,9 @@ setInterval(() => {
     wss.clients.forEach(client => {
         if (client.readyState === WebSocket.OPEN) client.send(state);
     });
-}, 50); // 20 FPS
+}, 50);
 
-// Periodically sync all food (less frequent)
+// Periodically sync all food
 setInterval(() => {
     const foodSync = JSON.stringify({ type: 'foodSync', f: foods });
     wss.clients.forEach(client => {
@@ -129,5 +107,5 @@ setInterval(() => {
 }, 5000);
 
 server.listen(PORT, () => {
-    console.log(`Server optimized for 100 players running on port ${PORT}`);
+    console.log(`Server running on port ${PORT} with map size ${MAP_SIZE}`);
 });

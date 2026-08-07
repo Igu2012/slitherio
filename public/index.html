@@ -2,94 +2,359 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Slither.io Optimized</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Slither.io</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            margin: 0; overflow: hidden; background-color: #0b0e14;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: white;
-            user-select: none; -webkit-user-select: none;
+            overflow: hidden;
+            background-color: #0b0e14;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: white;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
         }
-        canvas { display: block; touch-action: none; }
-        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
-        
+
+        canvas {
+            display: block;
+            touch-action: none;
+            width: 100%;
+            height: 100%;
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        /* Menu */
         #menu {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: rgba(10, 15, 25, 0.95); padding: 20px; border-radius: 20px;
-            text-align: center; pointer-events: auto; border: 2px solid #00ffcc;
-            box-shadow: 0 0 30px rgba(0, 255, 204, 0.2); width: 90%; max-width: 400px;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(11, 14, 20, 0.98);
+            padding: 30px;
+            border-radius: 16px;
+            text-align: center;
+            pointer-events: auto;
+            border: 2px solid #00ffcc;
+            box-shadow: 0 8px 32px rgba(0, 255, 204, 0.15);
+            width: 90%;
+            max-width: 380px;
+            z-index: 100;
         }
-        #menu h1 { margin-top: 0; color: #00ffcc; font-size: 28px; text-transform: uppercase; letter-spacing: 2px; }
-        input[type="text"] {
-            width: 80%; padding: 12px; margin: 10px 0; border-radius: 10px;
-            border: 1px solid #333; font-size: 16px; background: #1a1a1a; color: white; text-align: center;
+
+        #menu h1 {
+            margin: 0 0 20px 0;
+            color: #00ffcc;
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
         }
-        .custom-section { margin: 10px 0; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 15px; }
-        
+
+        #menu input[type="text"] {
+            width: 100%;
+            padding: 12px 16px;
+            margin: 12px 0;
+            border-radius: 8px;
+            border: 1px solid #333;
+            font-size: 16px;
+            background: rgba(26, 26, 26, 0.8);
+            color: white;
+            text-align: center;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        #menu input[type="text"]:focus {
+            border-color: #00ffcc;
+        }
+
+        .custom-section {
+            margin: 20px 0;
+            background: rgba(0, 255, 204, 0.05);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid rgba(0, 255, 204, 0.1);
+        }
+
         .snake-preview-container {
-            display: flex; align-items: center; justify-content: center; margin: 10px 0;
-            padding: 15px; background: #000; border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 15px 0;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
         }
+
         .preview-head {
-            width: 35px; height: 28px; border-radius: 15px; background: #00ffcc;
+            width: 40px;
+            height: 32px;
+            border-radius: 50%;
+            background: #00ffcc;
+            box-shadow: 0 0 12px rgba(0, 255, 204, 0.3);
         }
-        .color-picker { display: flex; justify-content: center; gap: 8px; margin: 10px 0; flex-wrap: wrap; }
-        .color-option { width: 25px; height: 25px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; }
 
-        button#start-btn {
-            background: linear-gradient(135deg, #00ffcc, #0099ff); color: black; border: none; padding: 12px;
-            font-size: 18px; font-weight: bold; border-radius: 30px; cursor: pointer;
-            width: 100%; text-transform: uppercase;
+        .color-picker {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 15px 0;
+            flex-wrap: wrap;
         }
-        
+
+        .color-option {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .color-option:hover {
+            transform: scale(1.15);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+
+        #start-btn {
+            width: 100%;
+            padding: 14px;
+            margin-top: 20px;
+            background: linear-gradient(135deg, #00ffcc 0%, #0099ff 100%);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 700;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 16px rgba(0, 255, 204, 0.2);
+        }
+
+        #start-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 255, 204, 0.3);
+        }
+
+        #start-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Leaderboard */
         #leaderboard {
-            position: absolute; top: 10px; right: 10px;
-            background: rgba(0, 0, 0, 0.6); padding: 10px; border-radius: 10px;
-            width: 180px; font-size: 12px; backdrop-filter: blur(5px); pointer-events: none;
+            position: fixed;
+            top: 12px;
+            right: 12px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 12px 16px;
+            border-radius: 12px;
+            width: 200px;
+            font-size: 13px;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(0, 255, 204, 0.2);
+            pointer-events: none;
+            z-index: 10;
         }
-        #leaderboard h2 { margin: 0 0 5px 0; font-size: 14px; color: #00ffcc; text-align: center; }
-        #leaderboard table { width: 100%; }
-        
+
+        #leaderboard h2 {
+            margin: 0 0 8px 0;
+            font-size: 13px;
+            color: #00ffcc;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid rgba(0, 255, 204, 0.2);
+            padding-bottom: 6px;
+        }
+
+        #leaderboard table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        #leaderboard tr {
+            height: 20px;
+        }
+
+        #leaderboard td {
+            padding: 2px 4px;
+            font-size: 12px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        #leaderboard td:first-child {
+            width: 20px;
+            color: #888;
+            font-weight: 600;
+        }
+
+        #leaderboard td:last-child {
+            text-align: right;
+            color: #00ffcc;
+            font-weight: 600;
+        }
+
+        /* Minimap */
         #minimap-container {
-            position: absolute; bottom: 20px; right: 20px;
-            width: 120px; height: 120px; background: rgba(0, 0, 0, 0.6);
-            border-radius: 50%; border: 1px solid #444; overflow: hidden;
+            position: fixed;
+            bottom: 16px;
+            right: 16px;
+            width: 120px;
+            height: 120px;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 50%;
+            border: 2px solid rgba(0, 255, 204, 0.3);
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+            pointer-events: none;
+            z-index: 10;
         }
-        #minimap { width: 100%; height: 100%; }
 
+        #minimap {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* Kill Screen */
         #kill-screen {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.8); display: none;
-            flex-direction: column; justify-content: center; align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none;
+            z-index: 50;
+            backdrop-filter: blur(4px);
         }
-        #kill-screen h2 { font-size: 40px; color: #ff3333; }
 
+        #kill-screen h2 {
+            font-size: 56px;
+            color: #ff3333;
+            font-weight: 700;
+            text-shadow: 0 0 20px rgba(255, 51, 51, 0.5);
+            margin: 0 0 16px 0;
+        }
+
+        #kill-screen p {
+            font-size: 20px;
+            color: #ccc;
+            margin: 0;
+        }
+
+        #respawn-timer {
+            color: #00ffcc;
+            font-weight: 700;
+            font-size: 24px;
+        }
+
+        /* Mobile Responsive */
         @media (max-width: 768px) {
-            #leaderboard { width: 140px; top: 5px; right: 5px; }
-            #minimap-container { width: 100px; height: 100px; bottom: 10px; right: 10px; }
+            #menu {
+                padding: 24px;
+                max-width: 90%;
+            }
+
+            #menu h1 {
+                font-size: 28px;
+            }
+
+            #leaderboard {
+                width: 160px;
+                font-size: 11px;
+                top: 8px;
+                right: 8px;
+            }
+
+            #leaderboard h2 {
+                font-size: 11px;
+            }
+
+            #minimap-container {
+                width: 100px;
+                height: 100px;
+                bottom: 12px;
+                right: 12px;
+            }
+
+            #kill-screen h2 {
+                font-size: 48px;
+            }
+
+            #kill-screen p {
+                font-size: 18px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #menu {
+                padding: 20px;
+            }
+
+            #menu h1 {
+                font-size: 24px;
+                margin-bottom: 16px;
+            }
+
+            #leaderboard {
+                width: 140px;
+                font-size: 10px;
+                top: 6px;
+                right: 6px;
+            }
+
+            #minimap-container {
+                width: 90px;
+                height: 90px;
+                bottom: 10px;
+                right: 10px;
+            }
         }
     </style>
 </head>
 <body>
     <canvas id="gameCanvas"></canvas>
-    
+
     <div id="ui-layer">
         <div id="menu">
             <h1>Slither IO</h1>
-            <input type="text" id="nickname" placeholder="Nickname..." maxlength="12">
-            
+            <input type="text" id="nickname" placeholder="Enter your nickname..." maxlength="12">
+
             <div class="custom-section">
                 <div class="snake-preview-container">
                     <div class="preview-head" id="preview-head"></div>
                 </div>
                 <div class="color-picker" id="color-picker"></div>
             </div>
-            
-            <button id="start-btn">PLAY</button>
+
+            <button id="start-btn">Play Now</button>
         </div>
 
         <div id="leaderboard">
-            <h2>LEADERBOARD</h2>
+            <h2>Leaderboard</h2>
             <table id="leaderboard-table"></table>
         </div>
 
@@ -98,7 +363,7 @@
         </div>
 
         <div id="kill-screen">
-            <h2>GAME OVER</h2>
+            <h2>Game Over</h2>
             <p>Respawning in <span id="respawn-timer">3</span>...</p>
         </div>
     </div>
