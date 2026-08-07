@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slither v1.0.0</title>
+    <style>
+        body {
+            margin: 0; overflow: hidden; background-color: #0b0e14;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: white;
+        }
+        canvas { display: block; }
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+        
+        /* Menu */
+        #menu {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: rgba(10, 15, 25, 0.95); padding: 30px; border-radius: 25px;
+            text-align: center; pointer-events: auto; border: 2px solid #00ffcc;
+            box-shadow: 0 0 40px rgba(0, 255, 204, 0.2); min-width: 420px;
+        }
+        #menu h1 { margin-top: 0; color: #00ffcc; font-size: 32px; text-transform: uppercase; letter-spacing: 3px; }
+        input[type="text"] {
+            width: 85%; padding: 12px; margin: 15px 0; border-radius: 10px;
+            border: 1px solid #333; font-size: 18px; background: #1a1a1a; color: white; text-align: center;
+        }
+        .custom-section { margin: 15px 0; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 15px; }
+        .customization-label { margin-bottom: 10px; font-weight: bold; color: #00ffcc; font-size: 14px; }
+        
+        /* Snake Preview with Head */
+        .snake-preview-container {
+            display: flex; align-items: center; justify-content: center; gap: 0; margin: 15px 0;
+            padding: 20px; background: #000; border-radius: 15px; position: relative;
+        }
+        .preview-head {
+            width: 40px; height: 32px; border-radius: 18px; position: relative;
+            margin-left: -5px; z-index: 10; cursor: pointer; border: 2px solid transparent;
+        }
+        .preview-head.active { border-color: #00ffcc; box-shadow: 0 0 15px #00ffcc; }
+        .preview-eye {
+            position: absolute; width: 10px; height: 10px; background: white; border-radius: 50%;
+            right: 8px;
+        }
+        .preview-eye.top { top: 4px; }
+        .preview-eye.bottom { bottom: 4px; }
+        .preview-pupil {
+            position: absolute; width: 4px; height: 4px; background: black; border-radius: 50%;
+            right: 2px; top: 3px;
+        }
+        
+        .preview-body { display: flex; flex-direction: row-reverse; gap: -5px; }
+        .preview-seg {
+            width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
+            border: 2px solid transparent; transition: 0.2s; margin-right: -8px;
+        }
+        .preview-seg.active { border-color: #00ffcc; transform: scale(1.1); z-index: 5; box-shadow: 0 0 15px #00ffcc; }
+
+        .color-picker { display: flex; justify-content: center; gap: 8px; margin: 15px 0; flex-wrap: wrap; }
+        .color-option {
+            width: 28px; height: 28px; border-radius: 50%; cursor: pointer;
+            border: 2px solid transparent; transition: 0.2s;
+        }
+        .color-option:hover { transform: scale(1.1); }
+        .color-option.selected { border-color: white; transform: scale(1.2); }
+
+        button#start-btn {
+            background: linear-gradient(135deg, #00ffcc, #0099ff); color: black; border: none; padding: 15px 40px;
+            font-size: 20px; font-weight: bold; border-radius: 35px; cursor: pointer;
+            transition: 0.3s; width: 100%; text-transform: uppercase;
+        }
+        button#start-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0, 255, 204, 0.4); }
+        
+        /* Leaderboard */
+        #leaderboard {
+            position: absolute; top: 20px; left: 20px;
+            background: rgba(0, 0, 0, 0.7); padding: 15px; border-radius: 12px;
+            width: 240px; border-left: 5px solid #00ffcc; backdrop-filter: blur(5px);
+        }
+        #leaderboard h2 { margin: 0 0 10px 0; font-size: 18px; color: #00ffcc; border-bottom: 1px solid #444; padding-bottom: 8px; }
+        #leaderboard table { width: 100%; border-collapse: collapse; }
+        #leaderboard td { padding: 6px 2px; font-size: 16px; }
+        .rank-num { width: 30px; color: #666; font-weight: bold; }
+        .score { text-align: right; font-weight: bold; color: #00ffcc; }
+        
+        /* Minimap */
+        #minimap-container {
+            position: absolute; bottom: 25px; right: 25px;
+            width: 160px; height: 160px; background: rgba(0, 0, 0, 0.8);
+            border-radius: 50%; border: 2px solid #333; overflow: hidden;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        #minimap { width: 100%; height: 100%; }
+
+        /* Kill Screen */
+        #kill-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6); display: none;
+            flex-direction: column; justify-content: center; align-items: center;
+            pointer-events: none; backdrop-filter: blur(3px);
+        }
+        #kill-screen h2 { font-size: 70px; color: #ff3333; text-shadow: 0 0 30px rgba(255,0,0,0.5); margin: 0; }
+        #kill-screen p { font-size: 28px; margin-top: 15px; color: white; }
+
+        #controls-hint {
+            position: absolute; bottom: 25px; left: 25px;
+            background: rgba(0, 0, 0, 0.6); padding: 12px 20px; border-radius: 10px; font-size: 14px;
+            border: 1px solid #333;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    
+    <div id="ui-layer">
+        <div id="menu">
+            <h1>Slither Clone</h1>
+            <input type="text" id="nickname" placeholder="Digite seu nome..." maxlength="12">
+            
+            <div class="custom-section">
+                <div class="customization-label">CUSTOMIZE SUA COBRA (Clique para mudar)</div>
+                <div class="snake-preview-container">
+                    <div class="preview-body" id="preview-body">
+                        <div class="preview-seg" data-index="4"></div>
+                        <div class="preview-seg" data-index="3"></div>
+                        <div class="preview-seg" data-index="2"></div>
+                        <div class="preview-seg" data-index="1"></div>
+                    </div>
+                    <div class="preview-head active" id="preview-head" data-index="0">
+                        <div class="preview-eye top"><div class="preview-pupil"></div></div>
+                        <div class="preview-eye bottom"><div class="preview-pupil"></div></div>
+                    </div>
+                </div>
+                <div class="color-picker" id="color-picker"></div>
+            </div>
+
+            <div style="margin: 15px 0; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                <label style="font-size: 14px; color: #00ffcc; font-weight: bold;">MODO LITE:</label>
+                <input type="checkbox" id="lite-mode-toggle" style="width: 20px; height: 20px; cursor: pointer;">
+            </div>
+            
+            <button id="start-btn">ENTRAR NA ARENA</button>
+            <p style="font-size: 12px; color: #666; margin-top: 15px;">Pressione <b>M</b> para voltar ao menu</p>
+        </div>
+
+        <div id="leaderboard" style="display:none;">
+            <h2>RANKING GLOBAL</h2>
+            <table id="leaderboard-table"></table>
+        </div>
+
+        <div id="minimap-container" style="display:none;">
+            <canvas id="minimap"></canvas>
+        </div>
+
+        <div id="kill-screen">
+            <h2>VOCÊ MORREU!</h2>
+            <p>Reiniciando em <span id="respawn-timer">3</span>...</p>
+        </div>
+
+        <div id="controls-hint" style="display:none;">
+            <b>Mouse:</b> Direção | <b>Clique:</b> Sprint | <b>M:</b> Menu
+        </div>
+    </div>
+
+    <script src="client.js"></script>
+</body>
+</html>
