@@ -64,18 +64,7 @@
         }
         #kill-screen h2 { font-size: 40px; color: #ff3333; }
 
-        /* Mobile Sprint Button */
-        #sprint-btn {
-            position: absolute; bottom: 40px; left: 40px;
-            width: 80px; height: 80px; background: rgba(0, 255, 204, 0.3);
-            border: 2px solid #00ffcc; border-radius: 50%;
-            display: none; pointer-events: auto;
-            justify-content: center; align-items: center;
-            font-weight: bold; color: #00ffcc;
-            -webkit-tap-highlight-color: transparent;
-        }
         @media (max-width: 768px) {
-            #sprint-btn { display: flex; }
             #leaderboard { width: 140px; top: 5px; right: 5px; }
             #minimap-container { width: 100px; height: 100px; bottom: 10px; right: 10px; }
         }
@@ -108,20 +97,30 @@
             <canvas id="minimap"></canvas>
         </div>
 
-        <div id="sprint-btn">BOOST</div>
-
         <div id="kill-screen">
             <h2>GAME OVER</h2>
             <p>Respawning in <span id="respawn-timer">3</span>...</p>
         </div>
     </div>
 
-    <script src="client.js"></script>
     <script>
-        // Additional mobile sprint button handling
-        const sBtn = document.getElementById('sprint-btn');
-        sBtn.addEventListener('touchstart', (e) => { e.preventDefault(); if(me) me.isSprinting = true; });
-        sBtn.addEventListener('touchend', (e) => { e.preventDefault(); if(me) me.isSprinting = false; });
+        // Fullscreen on first interaction for mobile
+        (function() {
+            function enableFullscreen() {
+                const docEl = document.documentElement;
+                const requestFullScreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
+                if (requestFullScreen) {
+                    requestFullScreen.call(docEl).catch(e => {});
+                }
+            }
+
+            if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+                ['touchstart', 'click', 'keydown'].forEach(event => {
+                    window.addEventListener(event, enableFullscreen, { once: true });
+                });
+            }
+        })();
     </script>
+    <script src="client.js"></script>
 </body>
 </html>

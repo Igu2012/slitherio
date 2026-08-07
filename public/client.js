@@ -22,6 +22,11 @@ let isDead = false;
 let lastUpdate = 0;
 let targetAngle = 0;
 
+// Touch double-tap detection
+let lastTouchTime = 0;
+let touchCount = 0;
+let isSprinting = false;
+
 // Customization
 let snakeColors = ['hsl(120, 70%, 50%)', 'hsl(210, 70%, 50%)', 'hsl(30, 70%, 50%)'];
 const colors = ['hsl(0, 70%, 50%)', 'hsl(30, 70%, 50%)', 'hsl(60, 70%, 50%)', 'hsl(120, 70%, 50%)', 'hsl(210, 70%, 50%)', 'hsl(270, 70%, 50%)', 'hsl(0, 0%, 100%)'];
@@ -64,8 +69,7 @@ function connect() {
                 serverIds.add(p.id);
                 if (p.id === playerId) {
                     if (me) {
-                        // Basic reconciliation if needed, but we trust local mostly
-                        me.score = p.s;
+                        me.score = Math.max(3, p.s);
                     }
                 } else {
                     if (!players.has(p.id)) {
@@ -75,12 +79,11 @@ function connect() {
                         existing.x = p.x;
                         existing.y = p.y;
                         existing.a = p.a;
-                        existing.s = p.s;
+                        existing.s = Math.max(3, p.s);
                         existing.sp = p.sp;
                     }
                 }
             });
-            // Remove players not in server sync
             for (const id of players.keys()) {
                 if (!serverIds.has(id)) players.delete(id);
             }
@@ -155,12 +158,23 @@ window.addEventListener('mousemove', (e) => handleInput(e.clientX, e.clientY));
 window.addEventListener('mousedown', () => { if(me) me.isSprinting = true; });
 window.addEventListener('mouseup', () => { if(me) me.isSprinting = false; });
 
-// Mobile touch
+// Mobile touch with double-tap for sprint
 canvas.addEventListener('touchstart', (e) => {
     e.preventDefault();
     const touch = e.touches[0];
     handleInput(touch.clientX, touch.clientY);
-    if (e.touches.length > 1) me.isSprinting = true;
+    
+    const now = Date.now();
+    if (now - lastTouchTime < 300) {
+        touchCount++;
+        if (touchCount === 2 && me) {
+            me.isSprinting = true;
+            touchCount = 0;
+        }
+    } else {
+        touchCount = 1;
+    }
+    lastTouchTime = now;
 }, {passive: false});
 
 canvas.addEventListener('touchmove', (e) => {
@@ -169,7 +183,11 @@ canvas.addEventListener('touchmove', (e) => {
     handleInput(touch.clientX, touch.clientY);
 }, {passive: false});
 
-canvas.addEventListener('touchend', () => { if(me) me.isSprinting = false; });
+canvas.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    if (me) me.isSprinting = false;
+    touchCount = 0;
+}, {passive: false});
 
 // Game Loop
 function gameLoop(now) {
@@ -194,7 +212,8 @@ function gameLoop(now) {
 
         // Update segments
         me.segments.unshift({x: me.x, y: me.y});
-        while (me.segments.length > Math.floor(me.score) * 3) me.segments.pop();
+        const maxSegs = Math.max(3, Math.floor(me.score) * 3);
+        while (me.segments.length > maxSegs) me.segments.pop();
 
         // Food collision
         const thickness = Math.min(80, 26 + (me.score - 5) * 0.5);
@@ -210,7 +229,6 @@ function gameLoop(now) {
         // Player collision
         players.forEach(p => {
             const otherThickness = Math.min(80, 26 + (p.s - 5) * 0.5);
-            // Check head against other's segments
             if (p.segments) {
                 for (let i = 0; i < p.segments.length; i += 5) {
                     const seg = p.segments[i];
@@ -229,7 +247,7 @@ function gameLoop(now) {
             socket.send(JSON.stringify({
                 type: 'update',
                 x: me.x, y: me.y, angle: me.angle,
-                score: me.score, isSprinting: me.isSprinting
+                score: Math.max(3, me.score), isSprinting: me.isSprinting
             }));
         }
 
@@ -241,7 +259,8 @@ function gameLoop(now) {
     players.forEach(p => {
         if (!p.segments) p.segments = [];
         p.segments.unshift({x: p.x, y: p.y});
-        while (p.segments.length > Math.floor(p.s) * 3) p.segments.pop();
+        const maxSegs = Math.max(3, Math.floor(p.s) * 3);
+        while (p.segments.length > maxSegs) p.segments.pop();
     });
 
     draw();
